@@ -320,7 +320,11 @@ bool Curl_conncache_foreach(struct Curl_easy *data,
 
     bundle = he->ptr;
     he = Curl_hash_next_element(&iter);
-
+    
+    if (bundle == NULL) {
+      return FALSE;
+    }
+    
     curr = bundle->conn_list.head;
     while(curr) {
       /* Yes, we need to update curr before calling func(), because func()
