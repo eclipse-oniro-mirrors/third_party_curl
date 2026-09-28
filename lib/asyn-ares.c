@@ -788,9 +788,11 @@ static void addrinfo_cb(void *arg, int status, int timeouts,
   } else {
     data->dns_status = CURL_DNS_STATUS_GET_INVALID;
   }
+
   if (res == NULL) {
     return;
   }
+  
   if(ARES_SUCCESS == status) {
     res->temp_ai = ares2addr(result->nodes);
     res->last_status = CURL_ASYNC_SUCCESS;
