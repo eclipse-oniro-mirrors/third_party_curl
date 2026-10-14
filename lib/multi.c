@@ -3508,7 +3508,7 @@ CURLMcode curl_multi_setopt(struct Curl_multi *multi,
     }
     break;
   default:
-    res = curl_multi_setopt02(multi, option, param);
+    res = CURLM_UNKNOWN_OPTION;
     break;
   }
   va_end(param);
