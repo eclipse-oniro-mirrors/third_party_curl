@@ -699,6 +699,8 @@ CURLcode Curl_vsetopt(struct Curl_easy *data, CURLoption option, va_list param)
      */
     if(data->set.str[STRING_AWS_SIGV4])
       data->set.httpauth = CURLAUTH_AWS_SIGV4;
+    else
+      data->set.httpauth &= ~(uint32_t)CURLAUTH_AWS_SIGV4;
     break;
 #endif
 
