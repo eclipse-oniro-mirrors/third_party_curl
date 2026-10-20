@@ -1599,14 +1599,16 @@ CURLcode Curl_dns_interceptor_resolve(struct Curl_easy *data,
      * that a port deliberately set by a custom interceptor is honored */
     if(ai->ai_family == AF_INET) {
       struct sockaddr_in *sin = (void *)ca->ai_addr;
-      if(sin->sin_port == 0)
+      if(sin->sin_port == 0) {
         sin->sin_port = htons((unsigned short)port);
+      }
     }
 #ifdef USE_IPV6
     else {
       struct sockaddr_in6 *sin6 = (void *)ca->ai_addr;
-      if(sin6->sin6_port == 0)
+      if(sin6->sin6_port == 0) {
         sin6->sin6_port = htons((unsigned short)port);
+      }
     }
 #endif
 
