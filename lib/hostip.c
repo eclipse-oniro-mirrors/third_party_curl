@@ -1594,6 +1594,24 @@ CURLcode Curl_dns_interceptor_resolve(struct Curl_easy *data,
     ca->ai_addr = (void *)((char *)ca + sizeof(struct Curl_addrinfo));
     memcpy(ca->ai_addr, ai->ai_addr, ss_size);
 
+    /* musl interceptor may not fill in the port; only set it from the
+     * requested port number when the interceptor left it at zero, so
+     * that a port deliberately set by a custom interceptor is honored */
+    if(ai->ai_family == AF_INET) {
+      struct sockaddr_in *sin = (void *)ca->ai_addr;
+      if(sin->sin_port == 0) {
+        sin->sin_port = htons((unsigned short)port);
+      }
+    }
+#ifdef USE_IPV6
+    else {
+      struct sockaddr_in6 *sin6 = (void *)ca->ai_addr;
+      if(sin6->sin6_port == 0) {
+        sin6->sin6_port = htons((unsigned short)port);
+      }
+    }
+#endif
+
     /* Copy canonname if present */
     if(namelen) {
       ca->ai_canonname = (void *)((char *)ca->ai_addr + ss_size);
