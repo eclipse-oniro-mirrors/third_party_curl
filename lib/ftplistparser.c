@@ -361,6 +361,16 @@ static CURLcode ftp_pl_insert_finfo(struct Curl_easy *data,
 
 #define MAX_FTPLIST_BUFFER 10000 /* arbitrarily set */
 
+/* returns TRUE if in wildcard listing mode */
+bool Curl_ftp_listmode(struct Curl_easy *data)
+{
+  if(data->state.wildcardmatch) {
+    struct WildcardData * const wildcard = data->wildcard;
+    return wildcard && (wildcard->state == CURLWC_MATCHING);
+  }
+  return FALSE;
+}
+
 size_t Curl_ftp_parselist(char *buffer, size_t size, size_t nmemb,
                           void *connptr)
 {
