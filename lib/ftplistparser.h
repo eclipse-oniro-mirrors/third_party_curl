@@ -27,6 +27,9 @@
 
 #ifndef CURL_DISABLE_FTP
 
+/* returns TRUE if in wildcard listing mode */
+bool Curl_ftp_listmode(struct Curl_easy *data);
+
 /* WRITEFUNCTION callback for parsing LIST responses */
 size_t Curl_ftp_parselist(char *buffer, size_t size, size_t nmemb,
                           void *connptr);
@@ -72,6 +75,8 @@ struct Curl_easy;
 
 #else
 /* FTP is disabled */
+#define Curl_ftp_listmode(x) FALSE
+#define Curl_ftp_parselist ZERO_NULL
 #define Curl_wildcard_dtor(x)
 #endif /* CURL_DISABLE_FTP */
 #endif /* HEADER_CURL_FTPLISTPARSER_H */
