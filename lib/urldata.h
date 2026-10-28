@@ -1067,6 +1067,7 @@ struct PureInfo {
   long numconnects; /* how many new connection did libcurl created */
   char *contenttype; /* the content type of the object */
   char *wouldredirect; /* URL this would've been redirected to if asked to */
+  char *effective_url; /* when needed */
   curl_off_t retry_after; /* info from Retry-After: header */
   unsigned int header_size;  /* size of read header(s) in bytes */
 
