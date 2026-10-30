@@ -1254,10 +1254,12 @@ struct CookieInfo *Curl_cookie_init(struct Curl_easy *data,
       struct dynbuf buf;
 #ifdef USE_ARES
       if (data->set.enable_cookie_value_change) {
-        Curl_dyn_init(&buf, MAX_COOKIE_LINE * data->set.cookies_line_max_size_multiplier);
+        Curl_dyn_init(&buf, MAX_COOKIE_LINE * data->set.cookies_line_max_size_multiplier + 48);
       } else {
 #endif
-        Curl_dyn_init(&buf, MAX_COOKIE_LINE);
+        /* accept a little longer lines so that a full cookie fits and does
+           not abort the file read */
+        Curl_dyn_init(&buf, MAX_COOKIE_LINE + 48);
 #ifdef USE_ARES
       }
 #endif
