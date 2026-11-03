@@ -41,18 +41,11 @@
 
 static int hitls_init(void)
 {
-    int32_t ret = BSL_GLOBAL_Init();
-    if (ret != BSL_SUCCESS) {
-        return FALSE;
-    }
-    ret = CRYPT_EAL_Init(CRYPT_EAL_INIT_CPU | CRYPT_EAL_INIT_PROVIDER);
+    int32_t ret = CRYPT_EAL_Init(CRYPT_EAL_INIT_CPU | CRYPT_EAL_INIT_RAND | CRYPT_EAL_INIT_PROVIDER);
     if (ret != CRYPT_SUCCESS) {
         return FALSE;
     }
-    ret = CRYPT_EAL_RandInit(CRYPT_RAND_SHA256, NULL, NULL, NULL, 0);
-    if (ret != CRYPT_SUCCESS && ret != CRYPT_EAL_ERR_DRBG_REPEAT_INIT) {
-        return FALSE;
-    }
+
     ret = HITLS_CertMethodInit();
     if (ret != HITLS_SUCCESS) {
         return FALSE;
