@@ -1650,7 +1650,7 @@ struct UserDefined {
   cookies_decode_free_function cookies_decode_free;
   void *cookies_decode_free_data;
   curl_sockreuse_callback fsockreuse; /* function for notifying socket reuse */
-  void sockconn_client; /* pointer to pass to the socket connection callback */
+  void *sockconn_client; /* pointer to pass to the socket connection callback */
 #endif
 
   curl_write_callback fwrite_func;   /* function that stores the output */
