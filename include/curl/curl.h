@@ -438,6 +438,9 @@ typedef enum {
 typedef int (*curl_sockopt_callback)(void *clientp,
                                      curl_socket_t curlfd,
                                      curlsocktype purpose);
+#ifdef USE_ARES
+typedef int (*curl_sockreuse_callback)(void *clientp, curl_socket_t curlfd);
+#endif
 #ifdef HTTP_HANDOVER_FEATURE
 typedef bool (*curl_connreuse_callback)(void *userdata, curl_socket_t curlfd);
 #endif
@@ -1149,6 +1152,8 @@ typedef enum {
   CURLOPT(CURLOPT_SSL_CTX_UNIFIED_USERDATA, CURLOPTTYPE_OBJECTPOINT, 2013),
   CURLOPT(CURLOPT_SSL_CTX_UNIFIED_PROXY_USERDATA, CURLOPTTYPE_OBJECTPOINT, 2014),
   CURLOPT(CURLOPT_HITLS_CTX_FUNCTION, CURLOPTTYPE_FUNCTIONPOINT, 2015),
+  CURLOPT(CURLOPT_SOCKREUSEFUNCTION, CURLOPTTYPE_FUNCTIONPOINT, 2016),
+  CURLOPT(CURLOPT_SOCKREUSEDATA, CURLOPTTYPE_CBPOINT, 2017),
 #endif
 
   /* This is the FILE * or void * the regular output should be written to. */

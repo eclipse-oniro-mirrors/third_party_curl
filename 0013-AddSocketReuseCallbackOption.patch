@@ -1,0 +1,73 @@
+diff --git a/include/curl/curl.h b/include/curl/curl.h
+index d4b1cec5b68f0afefe48cad9a385af29b903e640..bf484bfb3c9d88aa60ec8aba172e4f22d57c6dda 100644
+--- a/include/curl/curl.h
++++ b/include/curl/curl.h
+@@ -438,6 +438,9 @@ typedef enum {
+ typedef int (*curl_sockopt_callback)(void *clientp,
+                                      curl_socket_t curlfd,
+                                      curlsocktype purpose);
++#ifdef USE_ARES
++typedef int (*curl_sockreuse_callback)(void *clientp, curl_socket_t curlfd);
++#endif
+ #ifdef HTTP_HANDOVER_FEATURE
+ typedef bool (*curl_connreuse_callback)(void *userdata, curl_socket_t curlfd);
+ #endif
+@@ -1149,6 +1152,8 @@ typedef enum {
+   CURLOPT(CURLOPT_SSL_CTX_UNIFIED_USERDATA, CURLOPTTYPE_OBJECTPOINT, 2013),
+   CURLOPT(CURLOPT_SSL_CTX_UNIFIED_PROXY_USERDATA, CURLOPTTYPE_OBJECTPOINT, 2014),
+   CURLOPT(CURLOPT_HITLS_CTX_FUNCTION, CURLOPTTYPE_FUNCTIONPOINT, 2015),
++  CURLOPT(CURLOPT_SOCKREUSEFUNCTION, CURLOPTTYPE_FUNCTIONPOINT, 2016),
++  CURLOPT(CURLOPT_SOCKREUSEDATA, CURLOPTTYPE_CBPOINT, 2017),
+ #endif
+ 
+   /* This is the FILE * or void * the regular output should be written to. */
+diff --git a/lib/setopt.c b/lib/setopt.c
+index cc555542953aadd1c44c6070c58576c639061dce..213f6ce764c1432dac6f692c22d5abf172554d2c 100644
+--- a/lib/setopt.c
++++ b/lib/setopt.c
+@@ -2117,6 +2117,13 @@ CURLcode Curl_vsetopt(struct Curl_easy *data, CURLoption option, va_list param)
+ #endif
+       result = CURLE_NOT_BUILT_IN;
+     break;
++case CURLOPT_SOCKREUSEFUNCTION:
++  data->set.fsockreuse = va_arg(param, curl_sockreuse_callback);
++  break;
++
++case CURLOPT_SOCKREUSEDATA:
++  data->set.sockconn_client = va_arg(param, void *);
++  break;
+ #endif
+   case CURLOPT_SSL_CTX_DATA:
+     /*
+diff --git a/lib/url.c b/lib/url.c
+index 7395199d6d34c1ff92e424b066d3e3048ed3aa30..a8b2ab99f9d7c70daf838e163b796f951376850b 100644
+--- a/lib/url.c
++++ b/lib/url.c
+@@ -4055,7 +4055,13 @@ CURLcode Curl_connect(struct Curl_easy *data,
+ 
+   /* call the stuff that needs to be called */
+   result = create_conn(data, &conn, asyncp);
+-
++#ifdef USE_ARES
++  if (result == CURLE_OK && conn && data->set.fsockreuse && conn->sock[FIRSTSOCKET] != CURL_SOCKET_BAD) {
++    Curl_set_in_callback(data, true);
++    (void)data->set.fsockreuse(data->set.sockconn_client, conn->sock[FIRSTSOCKET]);
++    Curl_set_in_callback(data, false);
++  }
++#endif
+   if(!result) {
+     if(CONN_INUSE(conn) > 1)
+       /* multiplexed */
+diff --git a/lib/urldata.h b/lib/urldata.h
+index e875a8e17fffec3fc23ee25363fcdf337ba0a7bf..dcbf350c17e17a1cebb90d6789f3cfd60309eb13 100644
+--- a/lib/urldata.h
++++ b/lib/urldata.h
+@@ -1649,6 +1649,8 @@ struct UserDefined {
+   void *cookies_encode_free_data;
+   cookies_decode_free_function cookies_decode_free;
+   void *cookies_decode_free_data;
++  curl_sockreuse_callback fsockreuse; /* function for notifying socket reuse */
++  void sockconn_client; /* pointer to pass to the socket connection callback */
+ #endif
+ 
+   curl_write_callback fwrite_func;   /* function that stores the output */

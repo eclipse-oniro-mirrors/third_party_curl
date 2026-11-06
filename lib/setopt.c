@@ -2117,6 +2117,12 @@ CURLcode Curl_vsetopt(struct Curl_easy *data, CURLoption option, va_list param)
 #endif
       result = CURLE_NOT_BUILT_IN;
     break;
+  case CURLOPT_SOCKREUSEFUNCTION:
+    data->set.fsockreuse = va_arg(param, curl_sockreuse_callback);
+    break;
+  case CURLOPT_SOCKREUSEDATA:
+    data->set.sockconn_client = va_arg(param, void *);
+    break;
 #endif
   case CURLOPT_SSL_CTX_DATA:
     /*

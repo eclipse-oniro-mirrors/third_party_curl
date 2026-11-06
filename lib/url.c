@@ -4055,7 +4055,13 @@ CURLcode Curl_connect(struct Curl_easy *data,
 
   /* call the stuff that needs to be called */
   result = create_conn(data, &conn, asyncp);
-
+#ifdef USE_ARES
+  if (result == CURLE_OK && conn && data->set.fsockreuse && conn->sock[FIRSTSOCKET] != CURL_SOCKET_BAD) {
+    Curl_set_in_callback(data, true);
+    (void)data->set.fsockreuse(data->set.sockconn_client, conn->sock[FIRSTSOCKET]);
+    Curl_set_in_callback(data, false);
+  }
+#endif
   if(!result) {
     if(CONN_INUSE(conn) > 1)
       /* multiplexed */
