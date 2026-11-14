@@ -104,6 +104,7 @@ struct cw_out_ctx {
   struct cw_out_buf *buf;
   BIT(paused);
   BIT(errored);
+  BIT(flushing); /* inside cw_out_flush_chain() */
 };
 
 static CURLcode cw_out_write(struct Curl_easy *data,
@@ -228,9 +229,6 @@ static CURLcode cw_out_ptr_flush(struct cw_out_ctx *ctx,
     Curl_set_in_callback(data, TRUE);
     nwritten = wcb((char *)buf, 1, wlen, wcb_data);
     Curl_set_in_callback(data, FALSE);
-    CURL_TRC_WRITE(data, "cw_out, wrote %zu %s bytes -> %zu",
-                   wlen, (otype == CW_OUT_BODY)? "body" : "header",
-                   nwritten);
     if(CURL_WRITEFUNC_PAUSE == nwritten) {
       if(data->conn && data->conn->handler->flags & PROTOPT_NONETWORK) {
         /* Protocols that work without network cannot be paused. This is
@@ -242,6 +240,8 @@ static CURLcode cw_out_ptr_flush(struct cw_out_ctx *ctx,
       /* mark the connection as RECV paused */
       data->req.keepon |= KEEP_RECV_PAUSE;
       ctx->paused = TRUE;
+      /* Trace after pausing so an unpause from the debug callback is not
+         undone by the pause state being set afterwards. */
       CURL_TRC_WRITE(data, "cw_out, PAUSE requested by client");
       break;
     }
@@ -254,6 +254,9 @@ static CURLcode cw_out_ptr_flush(struct cw_out_ctx *ctx,
             "passed %zu returned %zd", wlen, nwritten);
       return CURLE_WRITE_ERROR;
     }
+    CURL_TRC_WRITE(data, "cw_out, wrote %zu %s bytes -> %zu",
+                   wlen, (otype == CW_OUT_BODY)? "body" : "header",
+                   nwritten);
     *pconsumed += nwritten;
     blen -= nwritten;
     buf += nwritten;
@@ -293,10 +296,10 @@ static CURLcode cw_out_buf_flush(struct cw_out_ctx *ctx,
   return result;
 }
 
-static CURLcode cw_out_flush_chain(struct cw_out_ctx *ctx,
-                                   struct Curl_easy *data,
-                                   struct cw_out_buf **pcwbuf,
-                                   bool flush_all)
+static CURLcode cw_out_flush_chain_do(struct cw_out_ctx *ctx,
+                                      struct Curl_easy *data,
+                                      struct cw_out_buf **pcwbuf,
+                                      bool flush_all)
 {
   struct cw_out_buf *cwbuf = *pcwbuf;
   CURLcode result;
@@ -311,7 +314,7 @@ static CURLcode cw_out_flush_chain(struct cw_out_ctx *ctx,
     struct cw_out_buf **plast = &cwbuf->next;
     while((*plast)->next)
       plast = &(*plast)->next;
-    result = cw_out_flush_chain(ctx, data, plast, flush_all);
+    result = cw_out_flush_chain_do(ctx, data, plast, flush_all);
     if(result)
       return result;
     if(*plast) {
@@ -329,6 +332,25 @@ static CURLcode cw_out_flush_chain(struct cw_out_ctx *ctx,
     *pcwbuf = NULL;
   }
   return CURLE_OK;
+}
+
+static CURLcode cw_out_flush_chain(struct cw_out_ctx *ctx,
+                                   struct Curl_easy *data,
+                                   struct cw_out_buf **pcwbuf,
+                                   bool flush_all)
+{
+  CURLcode result;
+
+  /* A callback invoked while we write (the debug callback, for example)
+     may call curl_easy_pause() to unpause, which flushes again. The running
+     flush holds a pointer to the buffer it writes, so a nested call must
+     leave the chain alone. The outer loop notices the unpause. */
+  if(ctx->flushing)
+    return CURLE_OK;
+  ctx->flushing = TRUE;
+  result = cw_out_flush_chain_do(ctx, data, pcwbuf, flush_all);
+  ctx->flushing = FALSE;
+  return result;
 }
 
 static CURLcode cw_out_append(struct cw_out_ctx *ctx,
