@@ -1254,12 +1254,18 @@ struct CookieInfo *Curl_cookie_init(struct Curl_easy *data,
       struct dynbuf buf;
 #ifdef USE_ARES
       if (data->set.enable_cookie_value_change) {
-        Curl_dyn_init(&buf, MAX_COOKIE_LINE * data->set.cookies_line_max_size_multiplier + 48);
+        /* Get_netscape_format() uses aprintf(), which returns at most
+           DYN_APRINTF - 1 bytes, and cookie_output() adds a newline. Keep
+           the custom multiplier as a lower bound, but never below the
+           largest row libcurl itself can generate. This is a cap, not an
+           allocation. */
+        Curl_dyn_init(&buf, CURLMAX(DYN_APRINTF + 2,
+          MAX_COOKIE_LINE * data->set.cookies_line_max_size_multiplier + 48));
       } else {
 #endif
-        /* accept a little longer lines so that a full cookie fits and does
-           not abort the file read */
-        Curl_dyn_init(&buf, MAX_COOKIE_LINE + 48);
+        /* accept complete self-generated rows so a valid cookie does not
+           abort the file read. This is a cap, not an allocation. */
+        Curl_dyn_init(&buf, DYN_APRINTF + 2);
 #ifdef USE_ARES
       }
 #endif
