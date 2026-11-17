@@ -343,8 +343,6 @@ if (defined(ohos_lite)) {
     sources = curl_source
 
     if ("${current_os}_${current_cpu}" == "mingw_x86_64") {
-      curl_https_ca_file_path = "\"../../resources/cacert.pem\""
-
       cflags = [
         "-g",
         "-O2",
@@ -360,7 +358,6 @@ if (defined(ohos_lite)) {
         "-DHAVE_OPENSSL_PKCS12_H",
         "-DHAVE_ENGINE_LOAD_BUILTIN_ENGINES",
         "-DOPENSSL_NO_KRB5",
-        "-DCURL_CA_BUNDLE=${curl_https_ca_file_path}",
         "-Wno-deprecated-declarations",
         "-Wimplicit-fallthrough",
       ]
@@ -520,8 +517,6 @@ if (defined(ohos_lite)) {
     sources = curl_source
 
     if ("${current_os}_${current_cpu}" == "mingw_x86_64") {
-      curl_https_ca_file_path = "\"../../resources/cacert.pem\""
-
       cflags = [
         "-g",
         "-O2",
@@ -537,7 +532,6 @@ if (defined(ohos_lite)) {
         "-DHAVE_OPENSSL_PKCS12_H",
         "-DHAVE_ENGINE_LOAD_BUILTIN_ENGINES",
         "-DOPENSSL_NO_KRB5",
-        "-DCURL_CA_BUNDLE=${curl_https_ca_file_path}",
         "-Wno-deprecated-declarations",
         "-Wimplicit-fallthrough",
       ]
