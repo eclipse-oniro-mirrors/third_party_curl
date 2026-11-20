@@ -146,9 +146,11 @@ typedef int curl_socket_t;
 #endif /* curl_socket_typedef */
 
 #ifdef USE_ARES
-
+#if __has_include("ares.h")
 #include "ares.h"
-
+#else
+#include "../../../cares/include/ares.h"
+#endif
 #define CURL_USE_ARES 1
 typedef struct {
   struct ares_socket_functions *functions;
