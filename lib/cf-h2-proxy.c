@@ -994,10 +994,7 @@ static CURLcode inspect_response(struct Curl_cfilter *cf,
     return CURLE_OK;
   }
 
-  if(ts->resp->status == 401) {
-    auth_reply = Curl_dynhds_cget(&ts->resp->headers, "WWW-Authenticate");
-  }
-  else if(ts->resp->status == 407) {
+  if(ts->resp->status == 407) {
     auth_reply = Curl_dynhds_cget(&ts->resp->headers, "Proxy-Authenticate");
   }
 
