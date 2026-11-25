@@ -287,6 +287,7 @@ CURLcode Curl_close(struct Curl_easy **datap)
 #endif
   Curl_safefree(data->info.contenttype);
   Curl_safefree(data->info.wouldredirect);
+  Curl_safefree(data->info.effective_url);
 
   /* this destroys the channel and we cannot use it anymore after this */
   Curl_resolver_cancel(data);

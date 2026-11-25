@@ -655,6 +655,7 @@ CURLcode Curl_pretransfer(struct Curl_easy *data)
   data->state.authhost.want = data->set.httpauth;
   data->state.authproxy.want = data->set.proxyauth;
   Curl_safefree(data->info.wouldredirect);
+  Curl_safefree(data->info.effective_url);
   Curl_data_priority_clear_state(data);
 
   if(data->state.httpreq == HTTPREQ_PUT)
