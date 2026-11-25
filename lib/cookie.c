@@ -1252,7 +1252,9 @@ struct CookieInfo *Curl_cookie_init(struct Curl_easy *data,
     c->running = FALSE; /* this is not running, this is init */
     if(fp) {
       struct dynbuf buf;
-      Curl_dyn_init(&buf, MAX_COOKIE_LINE);
+      /* accept a little longer lines so that a full cookie fits and does
+         not abort the file read */
+      Curl_dyn_init(&buf, MAX_COOKIE_LINE + 48);
       while(Curl_get_line(&buf, fp)) {
         char *lineptr = Curl_dyn_ptr(&buf);
         bool headerline = FALSE;
